@@ -1,26 +1,53 @@
+Desafio aceito! Vamos transformar o seu projeto em um dashboard "Nível NASA" (Profissional Sênior). 🚀
+
+Vou substituir a biblioteca gráfica antiga (matplotlib/seaborn) pela Plotly. A diferença é brutal: agora os gráficos serão interativos. O recrutador vai poder passar o mouse, dar zoom, filtrar clicando na legenda e ver detalhes de cada barra.
+
+Também adicionei a Sidebar Profissional e o Rodapé de Contato.
+
+⚠️ Importante: Atualize o requirements.txt
+Antes de rodar o código novo, você precisa adicionar a biblioteca plotly no seu arquivo requirements.txt. Ele deve ficar assim:
+
+Plaintext
+
+streamlit
+pandas
+plotly
+matplotlib
+seaborn
+Código Final app.py (Versão 2.0 - Interativa)
+Copie e substitua TODO o conteúdo do seu arquivo app.py:
+
+Python
+
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
-from math import pi
+import plotly.express as px
+import plotly.graph_objects as go
 
 # ==========================================
 # CONFIGURAÇÃO VISUAL (DARK MODE F1)
 # ==========================================
 st.set_page_config(page_title="Duelo de Eras: Hamilton vs Verstappen", layout="wide", page_icon="🏎️")
 
+# CSS Personalizado para ajustes finos
 st.markdown("""
 <style>
     .main { background-color: #0E1117; color: #FAFAFA; }
-    h1 { color: #FF1E1E; font-family: 'Arial Black', sans-serif; } /* Vermelho F1 */
-    h2, h3 { color: #E0E0E0; }
+    h1 { color: #FF1E1E; font-family: 'Arial Black', sans-serif; }
     .stTabs [data-baseweb="tab-list"] { gap: 10px; }
     .stTabs [data-baseweb="tab"] { background-color: #262730; border-radius: 5px; color: white; }
     .stTabs [data-baseweb="tab"][aria-selected="true"] { background-color: #FF1E1E; }
-    .stPlotlyChart { width: 100%; }
+    
+    /* Estilo para links do rodapé e sidebar */
+    a { text-decoration: none; color: #FF1E1E !important; font-weight: bold; }
+    a:hover { text-decoration: underline; }
 </style>
 """, unsafe_allow_html=True)
+
+# Paleta de Cores (Roxo Hamilton / Azul Max)
+CORES = {'Lewis Hamilton': '#6A0DAD', 'Max Verstappen': '#0600EF', 
+         'Hamilton': '#6A0DAD', 'Verstappen': '#0600EF'}
 
 # ==========================================
 # 1. CARREGAMENTO E TRATAMENTO DE DADOS
@@ -48,25 +75,47 @@ if results is not None:
     df = results.merge(drivers[['driverId', 'forename', 'surname']], on='driverId', how='left')
     df = df.merge(races[['raceId', 'year', 'date', 'round', 'name']], on='raceId', how='left')
     df['nome_piloto'] = df['forename'] + ' ' + df['surname']
-    # Filtra apenas Hamilton e Verstappen
     df = df[df['driverId'].isin([1, 830])].copy()
     # Ganho de posição
     df['pos_change'] = df.apply(lambda x: x['grid'] - x['positionOrder'] if x['grid'] > 0 else 0, axis=1)
 
 # ==========================================
-# 2. INTERFACE E STORYTELLING
+# 2. BARRA LATERAL (SIDEBAR)
+# ==========================================
+with st.sidebar:
+    st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=100) # Ícone genérico de perfil
+    st.title("Analista de Dados")
+    st.write("**Ed Carlos Nunes**")
+    st.markdown("---")
+    
+    st.write("📍 **Sobre Mim:**")
+    st.caption("Apaixonado por transformar dados complexos em histórias visuais. Especialista em Python, Pandas e Visualização de Dados.")
+    
+    st.write("🔗 **Conecte-se:**")
+    st.markdown("[👔 LinkedIn](https://www.linkedin.com/in/edcarlosnunes)") # Substitua pelo seu link real
+    st.markdown("[💻 GitHub](https://github.com/EdCarlosNunes)")
+    
+    st.markdown("---")
+    st.write("🎛️ **Filtros Globais**")
+    filtro_anos = st.slider("Período de Análise:", 2014, 2024, (2015, 2024))
+
+# Aplica filtro de anos no DF global para os gráficos que usam tempo
+df_filtrado = df[(df['year'] >= filtro_anos[0]) & (df['year'] <= filtro_anos[1])]
+
+# ==========================================
+# 3. INTERFACE PRINCIPAL
 # ==========================================
 
 st.title("🏎️ O Duelo de Eras")
-st.markdown("**Uma Análise de Dados sobre Lewis Hamilton e Max Verstappen**")
+st.markdown("**Uma Análise de Dados Interativa: Hamilton vs Verstappen**")
 
 st.info("""
 **Contexto:** A Fórmula 1 é definida por ciclos. O que acontece quando o maior vencedor de todos os tempos encontra o jovem prodígio mais veloz da história?
-Este projeto compara as trajetórias para entender onde suas carreiras se cruzam e como a dominância mudou de mãos.
+Este projeto compara as trajetórias para entender onde suas carreiras se cruzam.
+*Passe o mouse sobre os gráficos para ver detalhes.*
 """)
 
 if results is not None:
-    # DEFINIÇÃO DAS 6 ABAS
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "📈 Cap 1: Trajetórias", 
         "🚀 Cap 2: Anatomia",
@@ -76,57 +125,57 @@ if results is not None:
         "🏁 Conclusão"
     ])
 
-    # --- CAPÍTULO 1 ---
+    # --- CAPÍTULO 1: TRAJETÓRIAS (PLOTLY) ---
     with tab1:
         st.header("Capítulo 1: Trajetórias Paralelas")
-        st.write("""
-        Analisando os dados de número de corridas e vitórias na Fórmula 1, vemos que o Hamilton teve um grande começo. 
-        Porém, ele começou com 22 anos em 2007, o que dá um ganho em cima de Max, que começou na Fórmula 1 com 17 anos em 2015. 
-        Conseguimos ver que a maturidade contou para esse início grandioso de Hamilton, porém vemos que o ritmo de vitórias de Max ao atingir 200 corridas é assustadoramente similar ao auge de Hamilton.
-        """)
+        st.write("Ritmo de vitórias acumuladas por número de GPs disputados.")
         
+        # Preparar dados
         df_traj = df.sort_values(['driverId', 'year', 'round'])
         df_traj['win'] = (df_traj['positionOrder'] == 1).astype(int)
         df_traj['cum_wins'] = df_traj.groupby('driverId')['win'].cumsum()
         df_traj['race_count'] = df_traj.groupby('driverId').cumcount() + 1
         
-        fig1, ax1 = plt.subplots(figsize=(10, 4))
-        plt.style.use('dark_background')
-        sns.lineplot(data=df_traj, x='race_count', y='cum_wins', hue='nome_piloto', 
-                     palette={'Lewis Hamilton': '#00D2BE', 'Max Verstappen': '#0600EF'}, linewidth=2.5, ax=ax1)
-        ax1.set_xlabel("Número de GPs Disputados")
-        ax1.set_ylabel("Total de Vitórias")
-        ax1.grid(alpha=0.2)
-        st.pyplot(fig1)
+        # Gráfico Interativo
+        fig1 = px.line(df_traj, x='race_count', y='cum_wins', color='nome_piloto',
+                       color_discrete_map=CORES,
+                       labels={'race_count': 'GPs Disputados', 'cum_wins': 'Vitórias Acumuladas', 'nome_piloto': 'Piloto'},
+                       hover_data=['year', 'name'])
+        
+        fig1.update_layout(template="plotly_dark", hovermode="x unified")
+        st.plotly_chart(fig1, use_container_width=True)
 
-    # --- CAPÍTULO 2 ---
+    # --- CAPÍTULO 2: ANATOMIA (PLOTLY) ---
     with tab2:
         st.header("Capítulo 2: A Anatomia da Vitória")
         col_a, col_b = st.columns(2)
+        
         with col_a:
-            st.subheader("Perfil de Densidade")
-            fig2, ax2 = plt.subplots(figsize=(6, 4))
-            sns.kdeplot(data=df[df['grid']>0], x='pos_change', hue='nome_piloto', fill=True, 
-                        palette={'Lewis Hamilton': '#00D2BE', 'Max Verstappen': '#0600EF'}, ax=ax2)
-            ax2.axvline(0, color='white', linestyle='--')
-            ax2.set_xlim(-5, 15)
-            st.pyplot(fig2)
+            st.subheader("Distribuição de Ganho de Posição")
+            # Histograma como alternativa ao KDE para interatividade
+            fig2 = px.histogram(df_filtrado[df_filtrado['grid']>0], x="pos_change", color="nome_piloto",
+                                barmode="overlay", nbins=30, opacity=0.7,
+                                color_discrete_map=CORES,
+                                labels={'pos_change': 'Posições Ganhas/Perdidas'})
+            fig2.add_vline(x=0, line_dash="dash", line_color="white")
+            fig2.update_layout(template="plotly_dark", xaxis_title="Saldo de Posições (Direita = Ganhou)")
+            st.plotly_chart(fig2, use_container_width=True)
+            
         with col_b:
-            st.subheader("Top 'Masterclasses'")
-            top_rec = df.sort_values('pos_change', ascending=False).groupby('nome_piloto').head(3)
-            top_rec['Label'] = top_rec['name'] + ' ' + top_rec['year'].astype(str)
-            fig2b, ax2b = plt.subplots(figsize=(6, 4))
-            sns.barplot(data=top_rec, y='Label', x='pos_change', hue='nome_piloto',
-                        palette={'Lewis Hamilton': '#00D2BE', 'Max Verstappen': '#0600EF'}, ax=ax2b)
-            ax2b.set_xlabel("Posições Ganhas")
-            st.pyplot(fig2b)
+            st.subheader("Top 'Masterclasses' (Recuperações)")
+            top_rec = df.sort_values('pos_change', ascending=False).groupby('nome_piloto').head(5)
+            top_rec['Rotulo'] = top_rec['name'] + ' ' + top_rec['year'].astype(str)
+            
+            fig2b = px.bar(top_rec, x='pos_change', y='Rotulo', color='nome_piloto',
+                           orientation='h', color_discrete_map=CORES,
+                           text='pos_change')
+            fig2b.update_layout(template="plotly_dark", yaxis={'categoryorder':'total ascending'})
+            st.plotly_chart(fig2b, use_container_width=True)
 
-    # --- CAPÍTULO 3 ---
+    # --- CAPÍTULO 3: PONTOS (PLOTLY) ---
     with tab3:
-        st.header("Capítulo 3: Comparação de Pontos por Temporada")
-        st.markdown("""
-        Esta análise sugere que **Max Verstappen vive seu auge técnico**. A partir de 2020, os dados revelam uma transformação: ele atingiu uma maturidade e consistência impressionantes.
-        """)
+        st.header("Capítulo 3: Pontos Totais por Temporada")
+        st.markdown("Comparativo absoluto de pontos (incluindo Sprints).")
 
         def get_total_points(driver_id):
             df_res = results[results['driverId'] == driver_id].merge(races[['raceId', 'year']], on='raceId')
@@ -139,168 +188,98 @@ if results is not None:
 
         ham_pts = get_total_points(1)
         max_pts = get_total_points(830)
+        
+        # Criando Figura Manualmente com Go
+        fig3 = go.Figure()
+        fig3.add_trace(go.Scatter(x=ham_pts['year'], y=ham_pts['total'], mode='lines+markers+text',
+                                  name='Lewis Hamilton', line=dict(color='#6A0DAD', width=3),
+                                  text=ham_pts['total'], textposition="top center"))
+        
+        fig3.add_trace(go.Scatter(x=max_pts['year'], y=max_pts['total'], mode='lines+markers+text',
+                                  name='Max Verstappen', line=dict(color='#0600EF', width=3),
+                                  text=max_pts['total'], textposition="top center"))
+        
+        fig3.update_layout(template="plotly_dark", xaxis_title="Temporada", yaxis_title="Pontos Totais",
+                           hovermode="x unified")
+        st.plotly_chart(fig3, use_container_width=True)
 
-        fig3, ax3 = plt.subplots(figsize=(12, 6))
-        plt.style.use('dark_background')
-        ax3.plot(ham_pts['year'], ham_pts['total'], marker='o', color='#6A0DAD', label='Lewis Hamilton', linewidth=2.5)
-        ax3.plot(max_pts['year'], max_pts['total'], marker='s', color='#0600EF', label='Max Verstappen', linewidth=2.5)
-
-        for i, row in ham_pts.iterrows():
-            offset = 18 if row['year'] == 2021 else 12
-            ax3.annotate(f"{row['total']:.1f}", (row['year'], row['total']), textcoords="offset points", xytext=(0, offset), ha='center', fontsize=10, color='#6A0DAD', fontweight='bold')
-
-        for i, row in max_pts.iterrows():
-            offset = -25 if row['year'] == 2021 else -18
-            ax3.annotate(f"{row['total']:.1f}", (row['year'], row['total']), textcoords="offset points", xytext=(0, offset), ha='center', fontsize=10, color='#0600EF', fontweight='bold')
-
-        ax3.set_title('Comparação de Pontos Totais', fontsize=16, fontweight='bold', color='white')
-        ax3.grid(True, linestyle='--', alpha=0.3)
-        ax3.set_xticks(sorted(list(set(ham_pts['year']) | set(max_pts['year']))))
-        ax3.set_xticklabels(sorted(list(set(ham_pts['year']) | set(max_pts['year']))), rotation=45)
-        ax3.set_ylim(-30, 650)
-        ax3.legend(fontsize=12)
-        st.pyplot(fig3)
-
-    # --- CAPÍTULO 4 ---
+    # --- CAPÍTULO 4: PROBABILIDADE MAX (PLOTLY) ---
     with tab4:
-        st.header("Capítulo 4: Probabilidade de Pódio (Foco Max)")
-        st.markdown("""
-        Esta análise mede a **Taxa de Conversão** entre Posição de Largada e Pódios. Aqui identificamos o diferencial competitivo de Verstappen: a **independência do Grid**.
-        """)
+        st.header("Capítulo 4: Probabilidade de Pódio (Max)")
         
         max_id = 830
         max_results = results[results['driverId'] == max_id].copy()
         max_results['is_podium'] = (max_results['positionOrder'] <= 3).astype(int)
-
-        grid_stats = max_results.groupby('grid').agg(
-            total_largadas=('raceId', 'count'),
-            total_podios=('is_podium', 'sum')
-        ).reset_index()
-
-        grid_stats['chance_podio'] = (grid_stats['total_podios'] / grid_stats['total_largadas']) * 100
-        grid_stats = grid_stats.sort_values('grid')
+        grid_stats = max_results.groupby('grid').agg(total=('raceId', 'count'), podios=('is_podium', 'sum')).reset_index()
+        grid_stats['chance'] = (grid_stats['podios'] / grid_stats['total']) * 100
         grid_stats = grid_stats[grid_stats['grid'] <= 20]
-
-        fig4, ax4 = plt.subplots(figsize=(12, 6))
-        plt.style.use('dark_background')
         
-        bars = ax4.bar(grid_stats['grid'].astype(str), grid_stats['chance_podio'], color='#0600EF', alpha=0.8)
+        fig4 = px.bar(grid_stats, x='grid', y='chance', 
+                      color_discrete_sequence=['#0600EF'],
+                      text=grid_stats.apply(lambda x: f"{x['chance']:.0f}% ({int(x['podios'])}/{int(x['total'])})", axis=1),
+                      labels={'grid': 'Posição de Largada', 'chance': 'Chance de Pódio (%)'})
+        
+        fig4.update_layout(template="plotly_dark", xaxis=dict(tickmode='linear'))
+        st.plotly_chart(fig4, use_container_width=True)
 
-        for i, bar in enumerate(bars):
-            yval = bar.get_height()
-            total = grid_stats.iloc[i]['total_largadas']
-            podios = grid_stats.iloc[i]['total_podios']
-            ax4.text(bar.get_x() + bar.get_width()/2, yval + 1, 
-                     f"{yval:.0f}%\n({int(podios)}/{int(total)})", 
-                     ha='center', va='bottom', fontsize=8, color='white', fontweight='bold')
-
-        ax4.set_title('Probabilidade de Pódio de Max Verstappen', fontsize=14, fontweight='bold', color='white')
-        ax4.set_xlabel('Grid', fontsize=12, color='white')
-        ax4.set_ylabel('Chance (%)', fontsize=12, color='white')
-        ax4.set_ylim(0, 115)
-        ax4.grid(axis='y', linestyle='--', alpha=0.3)
-        st.pyplot(fig4)
-
-    # --- CAPÍTULO 5 (NOVO E CORRIGIDO) ---
+    # --- CAPÍTULO 5: DUELO DE GRID (PLOTLY) ---
     with tab5:
-        st.header("Capítulo 5: Duelo de Probabilidades (Grid vs Pódio)")
-        st.markdown("""
-        ### ⚔️ O Veredito: Resiliência vs. Controle
+        st.header("Capítulo 5: Duelo de Resiliência")
+        st.markdown("### ⚔️ Resiliência (Max) vs Controle (Lewis)")
         
-        Este gráfico confirma sua hipótese: **Max Verstappen é estatisticamente mais resiliente a posições ruins de largada.**
-        
-        * **Max Verstappen (O Caçador):** As barras azuis mostram que ele sustenta uma chance de pódio altíssima (acima de 50-60%) mesmo largando do meio do pelotão (P6-P14). Para Max, o grid é apenas um obstáculo temporário.
-        * **Lewis Hamilton (O Controlador):** As barras roxas mostram um domínio absoluto nas primeiras posições (P1-P3), mas uma queda acentuada ao largar de trás. O estilo de Hamilton é baseado na **perfeição da classificação**: ele vence evitando o tráfego, enquanto Max vence atacando o tráfego.
-        """)
-
-        # 1. Preparar Dados Básicos
+        # Preparação dos dados completa
         df_chart5 = df.copy()
         df_chart5['is_podium'] = df_chart5['positionOrder'].apply(lambda x: 1 if x <= 3 else 0)
         
-        # 2. Criar um "Esqueleto" com todas as combinações de Piloto e Grid (1 a 20)
-        # Isso força o gráfico a mostrar posições onde um piloto não tem dados
+        # Esqueleto 1-20
         grids_all = pd.DataFrame({'grid': range(1, 21)})
         pilotos_all = pd.DataFrame({'surname': ['Hamilton', 'Verstappen']})
-        # Produto cartesiano para ter todas as combinações
         template_df = pd.merge(pilotos_all.assign(key=1), grids_all.assign(key=1), on='key').drop('key', axis=1)
-
-        # 3. Calcular Estatísticas Reais
+        
         stats_real = df_chart5.groupby(['surname', 'grid']).agg(
             total_largadas=('raceId', 'count'),
             total_podios=('is_podium', 'sum')
         ).reset_index()
-
-        # 4. Juntar Estatísticas no Esqueleto (Preencher vazios com 0)
+        
         stats5 = pd.merge(template_df, stats_real, on=['surname', 'grid'], how='left').fillna(0)
-
-        # 5. Calcular Porcentagem (cuidado com divisão por zero)
         stats5['probabilidade'] = np.where(stats5['total_largadas'] > 0, 
-                                           (stats5['total_podios'] / stats5['total_largadas']) * 100, 
-                                           0)
-
-        # 6. Plotar Gráfico Robusto (1 a 20)
-        fig5, ax5 = plt.subplots(figsize=(16, 8)) # Mais largo para caber 20 barras duplas
-        plt.style.use('dark_background')
-        sns.set_style("darkgrid")
-
-        custom_palette = {'Hamilton': '#6A0DAD', 'Verstappen': '#0600EF'}
+                                           (stats5['total_podios'] / stats5['total_largadas']) * 100, 0)
         
-        sns.barplot(data=stats5, x='grid', y='probabilidade', hue='surname',
-                    palette=custom_palette, ax=ax5)
-
-        ax5.set_title('Probabilidade de Pódio por Posição de Largada (1-20)', fontsize=16, fontweight='bold', color='white')
-        ax5.set_xlabel('Posição de Largada (Grid)', fontsize=12, color='white')
-        ax5.set_ylabel('Chance de Pódio (%)', fontsize=12, color='white')
-        ax5.set_ylim(0, 115)
-        ax5.legend(title='Piloto', facecolor='#262730', edgecolor='white', labelcolor='white')
+        # Gráfico Plotly Grouped Bar
+        fig5 = px.bar(stats5, x='grid', y='probabilidade', color='surname', barmode='group',
+                      color_discrete_map=CORES,
+                      hover_data=['total_podios', 'total_largadas'],
+                      labels={'probabilidade': 'Chance de Pódio (%)', 'grid': 'Posição de Largada'},
+                      text=stats5.apply(lambda x: f"{x['probabilidade']:.0f}%" if x['total_largadas']>0 else "", axis=1))
         
-        # 7. Adicionar Labels Inteligentes (ignora zeros para não poluir)
-        for container in ax5.containers:
-            # Pega o nome do piloto deste container (para filtrar os dados correspondentes)
-            # O seaborn não dá o nome direto no container, mas a ordem segue o 'hue'.
-            # Como temos Hamilton e Verstappen, assumimos a ordem alfabética ou a ordem do dataframe
-            # Método mais seguro: iterar pelas barras e buscar o valor no dataframe 'stats5'
-            
-            # Vamos iterar barra por barra deste container
-            for i, bar in enumerate(container):
-                height = bar.get_height()
-                if height > 0: # Só escreve se tiver probabilidade > 0
-                    # Precisamos achar os dados brutos (Nº Podios / Nº Largadas)
-                    # Como o gráfico está ordenado por grid (0..19)
-                    grid_pos = i + 1
-                    # Descobre qual piloto é esse container (pela cor ou ordem)
-                    # Container 0 = 1º do Hue (Hamilton), Container 1 = 2º do Hue (Verstappen)
-                    # A ordem do hue é alfabética por padrão se não especificar 'hue_order', 
-                    # mas definimos a palette. O seaborn segue a ordem dos dados ou alfabética. 
-                    # 'Hamilton' vem antes de 'Verstappen'.
-                    
-                    piloto_atual = 'Hamilton' if container == ax5.containers[0] else 'Verstappen'
-                    
-                    # Busca os dados exatos na tabela stats5
-                    row = stats5[(stats5['grid'] == grid_pos) & (stats5['surname'] == piloto_atual)].iloc[0]
-                    podios = int(row['total_podios'])
-                    largadas = int(row['total_largadas'])
-                    
-                    ax5.text(bar.get_x() + bar.get_width()/2, height + 2, 
-                             f"{height:.0f}%\n({podios}/{largadas})", 
-                             ha='center', va='bottom', fontsize=8, color='white', fontweight='bold')
+        fig5.update_layout(template="plotly_dark", xaxis=dict(tickmode='linear', range=[0, 21]),
+                           legend_title_text='Piloto')
+        
+        st.plotly_chart(fig5, use_container_width=True)
 
-        st.pyplot(fig5)
-        st.info("Barras vazias indicam que o piloto nunca largou daquela posição ou nunca obteve pódio partindo dela.")
-
-    # --- CONCLUSÃO ---
+    # --- CONCLUSÃO E CONTATO ---
     with tab6:
-        st.header("Conclusão: O Que os Dados Dizem?")
+        st.header("Conclusão & Contato")
         st.balloons()
-        st.markdown("""
-        ### 🏁 Veredito dos Dados
-        1.  **A Era Hamilton (A Fortaleza):** Construída sobre Pole Positions e controle de corrida.
-        2.  **A Era Verstappen (O Ataque):** Construída sobre ritmo de corrida e agressividade.
         
-        > *"Os dados não dizem quem é o GOAT, mas revelam que vivemos a transição entre a maior consistência técnica da história e a maior aceleração de resultados já registrada."*
-        """)
-        st.success("Projeto Desenvolvido para Portfólio de Data Science | Python + Streamlit")
+        col_c1, col_c2 = st.columns([2, 1])
+        
+        with col_c1:
+            st.markdown("""
+            ### 🏁 Veredito dos Dados
+            1.  **A Era Hamilton (A Fortaleza):** Construída sobre Pole Positions e controle de corrida.
+            2.  **A Era Verstappen (O Ataque):** Construída sobre ritmo de corrida e agressividade.
+            
+            > *"Os dados não dizem quem é o GOAT, mas revelam que vivemos a transição entre a maior consistência técnica da história e a maior aceleração de resultados já registrada."*
+            """)
+            
+        with col_c2:
+            st.markdown("### 📬 Vamos Conversar?")
+            st.write("Gostou da análise? Estou disponível para projetos de Data Science.")
+            
+            st.link_button("👔 Me chame no LinkedIn", "https://www.linkedin.com/in/edcarlosnunes") # Ajuste o link
+            st.link_button("📧 Enviar E-mail", "mailto:seuemail@exemplo.com")
+            st.link_button("💻 Ver Código no GitHub", "https://github.com/EdCarlosNunes")
 
 else:
     st.warning("Aguardando carregamento dos dados...")
-
