@@ -28,11 +28,11 @@ Ao cruzar dados de Grid de Largada vs. Resultado Final, descobrimos dois perfis 
 
 ### 1. Visão Geral e Trajetórias
 *(Comparativo de vitórias por número de corridas)*
-![Print Trajetoria](https://via.placeholder.com/800x400?text=Coloque+o+Print+da+Aba+Trajetoria+Aqui)
+![Print Trajetoria](newplot.png)
 
 ### 2. Duelo de Probabilidades (O Insight Principal)
 *(Gráfico que prova a resiliência de Max partindo do fundo do grid)*
-![Print Duelo](https://via.placeholder.com/800x400?text=Coloque+o+Print+do+Capitulo+5+Aqui)
+![Print Duelo](newplot(1).png)
 
 ---
 
