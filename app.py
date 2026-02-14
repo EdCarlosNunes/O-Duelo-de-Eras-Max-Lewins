@@ -3,6 +3,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+results = pd.read_csv('results.csv')
+drivers = pd.read_csv('drivers.csv')
+races = pd.read_csv('races.csv')
+
 # Configuração da Página
 st.set_page_config(page_title="F1 Analytics: Hamilton vs Verstappen", layout="wide")
 
@@ -55,4 +59,5 @@ if results is not None:
                     palette={'Lewis Hamilton': '#00D2BE', 'Max Verstappen': '#0600EF'}, ax=ax2)
         plt.axvline(0, color='white', linestyle='--')
         st.pyplot(fig2)
+
         st.info("Valores positivos indicam ganho de posições durante a corrida.")
