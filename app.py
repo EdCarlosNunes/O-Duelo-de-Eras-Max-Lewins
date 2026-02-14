@@ -34,7 +34,6 @@ def load_data():
         try:
             sprint_results = pd.read_csv('sprint_results.csv')
         except:
-            # Cria DataFrame vazio se não tiver sprint, para não dar erro
             sprint_results = pd.DataFrame(columns=['resultId', 'raceId', 'driverId', 'points'])
 
         return results, drivers, races, sprint_results
@@ -49,8 +48,9 @@ if results is not None:
     df = results.merge(drivers[['driverId', 'forename', 'surname']], on='driverId', how='left')
     df = df.merge(races[['raceId', 'year', 'date', 'round', 'name']], on='raceId', how='left')
     df['nome_piloto'] = df['forename'] + ' ' + df['surname']
+    # Filtra apenas Hamilton e Verstappen
     df = df[df['driverId'].isin([1, 830])].copy()
-    # Coluna de ganho de posição (Grid - Chegada)
+    # Ganho de posição
     df['pos_change'] = df.apply(lambda x: x['grid'] - x['positionOrder'] if x['grid'] > 0 else 0, axis=1)
 
 # ==========================================
@@ -79,7 +79,6 @@ if results is not None:
     # --- CAPÍTULO 1 ---
     with tab1:
         st.header("Capítulo 1: Trajetórias Paralelas")
-        # AQUI ESTAVA O ERRO ANTERIOR (Aspas corrigidas abaixo)
         st.write("""
         Analisando os dados de número de corridas e vitórias na Fórmula 1, vemos que o Hamilton teve um grande começo. 
         Porém, ele começou com 22 anos em 2007, o que dá um ganho em cima de Max, que começou na Fórmula 1 com 17 anos em 2015. 
@@ -192,7 +191,7 @@ if results is not None:
             total = grid_stats.iloc[i]['total_largadas']
             podios = grid_stats.iloc[i]['total_podios']
             ax4.text(bar.get_x() + bar.get_width()/2, yval + 1, 
-                     f"{yval:.0f}%\\n({int(podios)}/{int(total)})", 
+                     f"{yval:.0f}%\n({int(podios)}/{int(total)})", 
                      ha='center', va='bottom', fontsize=8, color='white', fontweight='bold')
 
         ax4.set_title('Probabilidade de Pódio de Max Verstappen', fontsize=14, fontweight='bold', color='white')
@@ -202,46 +201,85 @@ if results is not None:
         ax4.grid(axis='y', linestyle='--', alpha=0.3)
         st.pyplot(fig4)
 
-   # --- CAPÍTULO 5 (NOVO) ---
+    # --- CAPÍTULO 5 (NOVO E CORRIGIDO) ---
     with tab5:
         st.header("Capítulo 5: Duelo de Probabilidades (Grid vs Pódio)")
-        st.markdown("Comparativo direto: Qual a chance de pódio para cada piloto dependendo de onde largam?")
+        st.markdown("Comparativo direto: Qual a chance de pódio para cada piloto dependendo de onde largam (Posições 1 a 20)?")
 
-        # 1. Preparar Dados
+        # 1. Preparar Dados Básicos
         df_chart5 = df.copy()
         df_chart5['is_podium'] = df_chart5['positionOrder'].apply(lambda x: 1 if x <= 3 else 0)
+        
+        # 2. Criar um "Esqueleto" com todas as combinações de Piloto e Grid (1 a 20)
+        # Isso força o gráfico a mostrar posições onde um piloto não tem dados
+        grids_all = pd.DataFrame({'grid': range(1, 21)})
+        pilotos_all = pd.DataFrame({'surname': ['Hamilton', 'Verstappen']})
+        # Produto cartesiano para ter todas as combinações
+        template_df = pd.merge(pilotos_all.assign(key=1), grids_all.assign(key=1), on='key').drop('key', axis=1)
 
-        # 2. Agrupar
-        stats5 = df_chart5.groupby(['surname', 'grid']).agg(
+        # 3. Calcular Estatísticas Reais
+        stats_real = df_chart5.groupby(['surname', 'grid']).agg(
             total_largadas=('raceId', 'count'),
             total_podios=('is_podium', 'sum')
         ).reset_index()
 
-        # 3. Calcular %
-        stats5['probabilidade'] = (stats5['total_podios'] / stats5['total_largadas']) * 100
-        stats5 = stats5[(stats5['grid'] > 0) & (stats5['grid'] <= 15)]
+        # 4. Juntar Estatísticas no Esqueleto (Preencher vazios com 0)
+        stats5 = pd.merge(template_df, stats_real, on=['surname', 'grid'], how='left').fillna(0)
 
-        # 4. Plotar
-        fig5, ax5 = plt.subplots(figsize=(14, 7))
+        # 5. Calcular Porcentagem (cuidado com divisão por zero)
+        stats5['probabilidade'] = np.where(stats5['total_largadas'] > 0, 
+                                           (stats5['total_podios'] / stats5['total_largadas']) * 100, 
+                                           0)
+
+        # 6. Plotar Gráfico Robusto (1 a 20)
+        fig5, ax5 = plt.subplots(figsize=(16, 8)) # Mais largo para caber 20 barras duplas
         plt.style.use('dark_background')
-        sns.set_style("darkgrid") # Mistura estilos para contraste
+        sns.set_style("darkgrid")
 
         custom_palette = {'Hamilton': '#6A0DAD', 'Verstappen': '#0600EF'}
         
         sns.barplot(data=stats5, x='grid', y='probabilidade', hue='surname',
                     palette=custom_palette, ax=ax5)
 
-        ax5.set_title('Probabilidade de Pódio por Posição de Largada: Hamilton vs Verstappen', fontsize=16, fontweight='bold', color='white')
+        ax5.set_title('Probabilidade de Pódio por Posição de Largada (1-20)', fontsize=16, fontweight='bold', color='white')
         ax5.set_xlabel('Posição de Largada (Grid)', fontsize=12, color='white')
         ax5.set_ylabel('Chance de Pódio (%)', fontsize=12, color='white')
         ax5.set_ylim(0, 115)
         ax5.legend(title='Piloto', facecolor='#262730', edgecolor='white', labelcolor='white')
         
-        # Labels
+        # 7. Adicionar Labels Inteligentes (ignora zeros para não poluir)
         for container in ax5.containers:
-            ax5.bar_label(container, fmt='%.0f%%', padding=3, fontsize=9, color='white')
+            # Pega o nome do piloto deste container (para filtrar os dados correspondentes)
+            # O seaborn não dá o nome direto no container, mas a ordem segue o 'hue'.
+            # Como temos Hamilton e Verstappen, assumimos a ordem alfabética ou a ordem do dataframe
+            # Método mais seguro: iterar pelas barras e buscar o valor no dataframe 'stats5'
+            
+            # Vamos iterar barra por barra deste container
+            for i, bar in enumerate(container):
+                height = bar.get_height()
+                if height > 0: # Só escreve se tiver probabilidade > 0
+                    # Precisamos achar os dados brutos (Nº Podios / Nº Largadas)
+                    # Como o gráfico está ordenado por grid (0..19)
+                    grid_pos = i + 1
+                    # Descobre qual piloto é esse container (pela cor ou ordem)
+                    # Container 0 = 1º do Hue (Hamilton), Container 1 = 2º do Hue (Verstappen)
+                    # A ordem do hue é alfabética por padrão se não especificar 'hue_order', 
+                    # mas definimos a palette. O seaborn segue a ordem dos dados ou alfabética. 
+                    # 'Hamilton' vem antes de 'Verstappen'.
+                    
+                    piloto_atual = 'Hamilton' if container == ax5.containers[0] else 'Verstappen'
+                    
+                    # Busca os dados exatos na tabela stats5
+                    row = stats5[(stats5['grid'] == grid_pos) & (stats5['surname'] == piloto_atual)].iloc[0]
+                    podios = int(row['total_podios'])
+                    largadas = int(row['total_largadas'])
+                    
+                    ax5.text(bar.get_x() + bar.get_width()/2, height + 2, 
+                             f"{height:.0f}%\n({podios}/{largadas})", 
+                             ha='center', va='bottom', fontsize=8, color='white', fontweight='bold')
 
         st.pyplot(fig5)
+        st.info("Barras vazias indicam que o piloto nunca largou daquela posição ou nunca obteve pódio partindo dela.")
 
     # --- CONCLUSÃO ---
     with tab6:
