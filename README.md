@@ -1,75 +1,52 @@
-# O-Duelo-de-Eras-Max-Lewins
+# 🏎️ O Duelo de Eras: Hamilton vs Verstappen
+> **Uma análise de dados interativa sobre a transição de dominância na Fórmula 1.**
 
-🏎️ F1 Data Insight: Hamilton vs Verstappen
-Análise de Dados e Storytelling sobre a Transição de Dominância na Fórmula 1
-🇧🇷 Português
----------------------------------------------------------------------------------
-📝 Sobre o Projeto
-Este projeto nasceu da curiosidade de entender, através dos números, a transição da "Era Hamilton" para a "Era Verstappen". Utilizando o dataset histórico da F1 (Ergast API), construí uma narrativa de dados que explora não apenas quem venceu mais, mas como cada um venceu.
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://o-duelo-de-eras-max-lewins.streamlit.app)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+![Pandas](https://img.shields.io/badge/Pandas-Data%20Analysis-150458)
+![Plotly](https://img.shields.io/badge/Plotly-Interactive-3F4F75)
 
-O projeto inclui uma aplicação interativa desenvolvida com Streamlit e análises estatísticas avançadas em Python.
----------------------------------------------------------------------------------
-📊 Principais Análises
-Trajetória de Sucesso: Comparação de vitórias acumuladas por número de GPs disputados.
+## 📊 Sobre o Projeto
+A Fórmula 1 é definida por ciclos. Este projeto utiliza **Python** e **Ciência de Dados** para responder a uma pergunta fundamental: 
+**"O que acontece quando o maior vencedor de todos os tempos (Hamilton) encontra o jovem prodígio mais veloz da história (Verstappen)?"**
 
-The Racer Index: Análise de agressividade (Posição de Largada vs. Posição de Chegada).
+Não é apenas sobre quem ganhou mais, mas **como** ganharam. O dashboard interativo explora resiliência, consistência e probabilidade.
 
-DNA do Piloto: Gráficos de radar comparando eficiência de pódios, confiabilidade e ritmo de qualificação.
+🔗 **[Acesse o Dashboard Online Aqui](https://o-duelo-de-eras-max-lewins.streamlit.app)**
 
-Índice de Instabilidade: Uso de desvio padrão para medir a consistência de performance por temporada.
----------------------------------------------------------------------------------
-🛠️ Tecnologias Utilizadas
-Python 3.10+
+---
 
-Pandas: Manipulação e limpeza de dados.
+## 🧠 O Grande Insight (Data Storytelling)
+Ao cruzar dados de Grid de Largada vs. Resultado Final, descobrimos dois perfis estatísticos distintos:
 
-Matplotlib & Seaborn: Visualizações estatísticas.
+* 🛡️ **Lewis Hamilton (O Controlador):** Alta correlação entre Pole Position e Vitória. Seu domínio é baseado na perfeição da classificação.
+* ⚔️ **Max Verstappen (O Caçador):** Baixa correlação entre Grid e Pódio. Estatisticamente, Max é mais **resiliente**, mantendo chances de pódio acima de 50% mesmo largando do meio do pelotão (P6-P14).
 
-Plotly: Gráficos interativos para a web.
+---
 
-Streamlit: Deploy da aplicação interativa.
+## 📸 Screenshots do Projeto
 
-🇺🇸 English
----------------------------------------------------------------------------------
-📝 About the Project
-This project was born out of the curiosity to understand, through data, the transition from the "Hamilton Era" to the "Verstappen Era". Using the F1 historical dataset (Ergast API), I built a data narrative that explores not just who won more, but how each one won.
+### 1. Visão Geral e Trajetórias
+*(Comparativo de vitórias por número de corridas)*
+![Print Trajetoria](https://via.placeholder.com/800x400?text=Coloque+o+Print+da+Aba+Trajetoria+Aqui)
 
-The project features an interactive web app built with Streamlit and advanced statistical analysis in Python.
+### 2. Duelo de Probabilidades (O Insight Principal)
+*(Gráfico que prova a resiliência de Max partindo do fundo do grid)*
+![Print Duelo](https://via.placeholder.com/800x400?text=Coloque+o+Print+do+Capitulo+5+Aqui)
 
-📊 Key Insights
-Success Trajectory: Comparison of cumulative wins based on the number of GPs entered (Experience vs. Success).
+---
 
-The Racer Index: Aggressiveness analysis (Starting Grid vs. Finishing Position).
+## 🛠️ Tecnologias Utilizadas
+* **Python:** Linguagem principal.
+* **Streamlit:** Framework para Web App interativo.
+* **Pandas:** Manipulação e limpeza de dados (ETL).
+* **Plotly:** Gráficos interativos e dinâmicos.
+* **Dataset:** Dados históricos de 1950 a 2024.
 
-Driver DNA: Radar charts comparing podium efficiency, reliability, and qualifying pace.
+---
 
-Instability Index: Using standard deviation to measure performance consistency per season.
+## 🚀 Como Executar Localmente
 
-🛠️ Tech Stack
-Python 3.10+
-
-Pandas: Data manipulation and cleaning.
-
-Matplotlib & Seaborn: Statistical visualizations.
-
-Plotly: Interactive web charts.
-
-Streamlit: Interactive app deployment.
-
-🚀 Como Executar / How to Run
-Clone o repositório / Clone the repo:
-
-Bash
-
-git clone https://github.com/seu-usuario/seu-repositorio.git
-Instale as dependências / Install requirements:
-
-Bash
-
-pip install -r requirements.txt
-Execute o App / Run the App:
-
-Bash
-
-streamlit run app.py
-Desenvolvido por / Developed by: Ed Carlos Nunes Almeida
+1. Clone o repositório:
+```bash
+git clone [https://github.com/EdCarlosNunes/O-Duelo-de-Eras-Max-Lewins.git](https://github.com/EdCarlosNunes/O-Duelo-de-Eras-Max-Lewins.git)
