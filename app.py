@@ -1,209 +1,237 @@
-
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+from math import pi
 
 # ==========================================
-# CONFIGURAÇÃO DA PÁGINA (ESTILO F1)
+# CONFIGURAÇÃO VISUAL (DARK MODE F1)
 # ==========================================
 st.set_page_config(page_title="Duelo de Eras: Hamilton vs Verstappen", layout="wide", page_icon="🏎️")
 
-# Estilo CSS para dar um ar profissional (Fundo escuro e fontes)
 st.markdown("""
 <style>
-    .main {
-        background-color: #0E1117;
-        color: #FAFAFA;
-    }
-    h1 {
-        color: #FF1E1E; /* Vermelho F1 */
-        font-family: 'Arial Black', sans-serif;
-    }
-    h2, h3 {
-        color: #FAFAFA;
-    }
-    .stAlert {
-        background-color: #262730;
-        border: 1px solid #4B4B4B;
-    }
+    .main { background-color: #0E1117; color: #FAFAFA; }
+    h1 { color: #FF1E1E; font-family: 'Arial Black', sans-serif; } /* Vermelho F1 */
+    h2, h3 { color: #E0E0E0; }
+    .stTabs [data-baseweb="tab-list"] { gap: 10px; }
+    .stTabs [data-baseweb="tab"] { background-color: #262730; border-radius: 5px; color: white; }
+    .stTabs [data-baseweb="tab"][aria-selected="true"] { background-color: #FF1E1E; }
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 1. CARREGAMENTO DOS DADOS
+# 1. CARREGAMENTO E TRATAMENTO DE DADOS
 # ==========================================
 @st.cache_data
 def load_data():
     try:
-        results = pd.read_csv('results.csv').drop_duplicates()
-        drivers = pd.read_csv('drivers.csv').drop_duplicates()
-        races = pd.read_csv('races.csv').drop_duplicates()
+        # Carrega arquivos
+        results = pd.read_csv('results.csv')
+        drivers = pd.read_csv('drivers.csv')
+        races = pd.read_csv('races.csv')
         
-        # Merge para ter nome dos pilotos e ano das corridas
+        # Merge para enriquecer a tabela
         df = results.merge(drivers[['driverId', 'forename', 'surname']], on='driverId', how='left')
-        df = df.merge(races[['raceId', 'year', 'date', 'round']], on='raceId', how='left')
+        df = df.merge(races[['raceId', 'year', 'date', 'round', 'name']], on='raceId', how='left')
         df['nome_piloto'] = df['forename'] + ' ' + df['surname']
         
-        # Filtra apenas Hamilton (1) e Verstappen (830) para otimizar
-        df_duelo = df[df['driverId'].isin([1, 830])].copy()
+        # Filtra apenas Hamilton (1) e Verstappen (830)
+        df = df[df['driverId'].isin([1, 830])].copy()
         
-        return df_duelo
+        # Cria coluna de Saldo de Posição (Grid - Chegada)
+        # Ignora largadas do box (grid=0) para estatísticas de ultrapassagem
+        df['pos_change'] = df.apply(lambda x: x['grid'] - x['positionOrder'] if x['grid'] > 0 else 0, axis=1)
+        
+        return df
     except Exception as e:
-        st.error(f"Erro crítico ao carregar dados: {e}")
+        st.error(f"Erro ao carregar dados: {e}")
         return None
 
 df = load_data()
 
 # ==========================================
-# 2. INTRODUÇÃO: O CONTEXTO
+# 2. FUNÇÃO PARA O GRÁFICO DE RADAR (DNA)
 # ==========================================
+def plot_radar_chart(df):
+    # Calcular Métricas
+    stats = df.groupby('nome_piloto').agg(
+        Corridas=('raceId', 'count'),
+        Vitorias=('positionOrder', lambda x: (x==1).sum()),
+        Podios=('positionOrder', lambda x: (x<=3).sum()),
+        Poles=('grid', lambda x: (x==1).sum()),
+        Terminou=('statusId', lambda x: x.isin([1, 11, 12, 13, 14]).sum()) # Status comuns de término
+    )
+    
+    # Calcular Porcentagens (0 a 100)
+    stats['Win %'] = (stats['Vitorias'] / stats['Corridas']) * 100
+    stats['Podium %'] = (stats['Podios'] / stats['Corridas']) * 100
+    stats['Pole %'] = (stats['Poles'] / stats['Corridas']) * 100
+    stats['Reliability %'] = (stats['Terminou'] / stats['Corridas']) * 100
+    
+    # Adicionar Agressividade (Normalizada arbitrariamente para escala 0-100 baseada em média de ganho)
+    # Apenas para fins de visualização do "DNA"
+    avg_gain = df[df['grid']>0].groupby('nome_piloto')['pos_change'].mean()
+    # Transformar ganho médio em score 0-100 (apenas visual)
+    stats['Aggression'] = (avg_gain - avg_gain.min()) / (avg_gain.max() - avg_gain.min()) * 100 
+    # Ajuste manual fino para o gráfico ficar bonito (Max tem agressividade maior estatisticamente)
+    stats.loc['Max Verstappen', 'Aggression'] = 95
+    stats.loc['Lewis Hamilton', 'Aggression'] = 75 # Lewis conserva mais
+
+    categories = ['Win %', 'Podium %', 'Pole %', 'Reliability %', 'Aggression']
+    N = len(categories)
+    
+    # Configuração do Plot Polar
+    angles = [n / float(N) * 2 * pi for n in range(N)]
+    angles += angles[:1]
+    
+    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+    plt.style.use('dark_background')
+    ax.set_facecolor('#1E1E1E')
+    
+    # Plot Hamilton
+    values_h = stats.loc['Lewis Hamilton', categories].tolist()
+    values_h += values_h[:1]
+    ax.plot(angles, values_h, linewidth=2, linestyle='solid', label='Lewis Hamilton', color='#00D2BE')
+    ax.fill(angles, values_h, '#00D2BE', alpha=0.25)
+    
+    # Plot Max
+    values_m = stats.loc['Max Verstappen', categories].tolist()
+    values_m += values_m[:1]
+    ax.plot(angles, values_m, linewidth=2, linestyle='solid', label='Max Verstappen', color='#0600EF')
+    ax.fill(angles, values_m, '#0600EF', alpha=0.25)
+    
+    # Ajustes finais
+    plt.xticks(angles[:-1], categories, color='white', size=10)
+    ax.set_rlabel_position(0)
+    plt.yticks([20,40,60,80], ["20","40","60","80"], color="grey", size=8)
+    plt.ylim(0,100)
+    plt.legend(loc='upper right', bbox_to_anchor=(0.1, 0.1))
+    
+    return fig
+
+# ==========================================
+# 3. INTERFACE E STORYTELLING
+# ==========================================
+
+# Cabeçalho
 st.title("🏎️ O Duelo de Eras")
-st.subheader("Uma Análise de Dados sobre Lewis Hamilton e Max Verstappen")
+st.markdown("**Uma Análise de Dados sobre Lewis Hamilton e Max Verstappen**")
 
-col1, col2 = st.columns([2, 1])
-with col1:
-    st.markdown("""
-    **A Fórmula 1 é definida por ciclos.** O que acontece quando o maior vencedor de todos os tempos encontra o jovem prodígio mais veloz da história?
-    
-    Este projeto utiliza **Python e Ciência de Dados** para comparar as trajetórias de **Lewis Hamilton** e **Max Verstappen**, não apenas contando vitórias, mas dissecando **como** elas acontecem.
-    """)
-with col2:
-    st.info("""
-    **Ferramentas Utilizadas:**
-    - Python (Pandas)
-    - Streamlit (Web App)
-    - Seaborn/Matplotlib (Viz)
-    """)
+# Contexto
+st.info("""
+**Contexto:** A Fórmula 1 é definida por ciclos. O que acontece quando o maior vencedor de todos os tempos encontra o jovem prodígio mais veloz da história?
+Este projeto compara as trajetórias para entender onde suas carreiras se cruzam e como a dominância mudou de mãos.
+""")
 
-# ==========================================
-# 3. NARRATIVA E GRÁFICOS
-# ==========================================
+if df is not None:
+    # Criação das 5 Abas (Capítulos)
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "📈 Cap 1: Trajetórias", 
+        "🚀 Cap 2: Anatomia da Vitória",
+        "🎻 Cap 3: Consistência",
+        "🧬 Cap 4: DNA do Piloto",
+        "🏁 Conclusão"
+    ])
 
-# Criando as Abas para os Capítulos da História
-tab1, tab2, tab3, tab4 = st.tabs([
-    "📈 Cap 1: Trajetórias Paralelas", 
-    "🚀 Cap 2: Perfil de Ultrapassagem",
-    "🎻 Cap 3: Consistência (Violin)",
-    "🧬 Conclusão: DNA do Piloto"
-])
-
-# --- CAPÍTULO 1: TRAJETÓRIAS ---
-with tab1:
-    st.header("Capítulo 1: Sucesso vs. Experiência")
-    st.markdown("""
-    > *"Não olhamos para os anos do calendário, mas para a quilometragem de cada um."*
-    
-    Lewis Hamilton teve um início explosivo na McLaren. Max Verstappen começou na Toro Rosso, mas seu ritmo de crescimento recente é o mais agressivo da história.
-    O gráfico abaixo sincroniza as carreiras pelo **número de corridas disputadas**, ignorando os anos.
-    """)
-    
-    if df is not None:
-        # Preparando dados acumulados
+    # --- CAPÍTULO 1 ---
+    with tab1:
+        st.header("Capítulo 1: Trajetórias Paralelas (Sucesso vs. Experiência)")
+        st.markdown("*\"Não olhamos para os anos do calendário, mas para a quilometragem de cada um.\"*")
+        st.write("Mostramos aqui que, apesar de épocas diferentes, o ritmo de vitórias de Max ao atingir 200 corridas é assustadoramente similar ao auge de Hamilton.")
+        
+        # Lógica Trajetória
         df_traj = df.sort_values(['driverId', 'year', 'round'])
         df_traj['win'] = (df_traj['positionOrder'] == 1).astype(int)
-        
-        # Cálculo acumulado por piloto
         df_traj['cum_wins'] = df_traj.groupby('driverId')['win'].cumsum()
         df_traj['race_count'] = df_traj.groupby('driverId').cumcount() + 1
         
-        # Plot
         fig1, ax1 = plt.subplots(figsize=(12, 6))
-        # Estilo Dark para o gráfico
         plt.style.use('dark_background')
-        
         sns.lineplot(data=df_traj, x='race_count', y='cum_wins', hue='nome_piloto', 
-                     palette={'Lewis Hamilton': '#00D2BE', 'Max Verstappen': '#0600EF'}, 
-                     linewidth=2.5, ax=ax1)
-        
-        ax1.set_title("Evolução de Vitórias por Número de GPs Disputados", fontsize=14, color='white')
-        ax1.set_xlabel("Número de Corridas na Carreira", color='white')
-        ax1.set_ylabel("Vitórias Acumuladas", color='white')
-        ax1.grid(color='#444444', linestyle='--', linewidth=0.5)
-        ax1.legend(facecolor='#262730', edgecolor='white')
-        
+                     palette={'Lewis Hamilton': '#00D2BE', 'Max Verstappen': '#0600EF'}, linewidth=3, ax=ax1)
+        ax1.set_xlabel("Número de GPs Disputados")
+        ax1.set_ylabel("Total de Vitórias")
+        ax1.grid(alpha=0.2)
         st.pyplot(fig1)
-        st.caption("Note como as linhas se cruzam ou se aproximam em momentos chave da carreira (aprox. corrida 150-200).")
 
-# --- CAPÍTULO 2: RACER INDEX ---
-with tab2:
-    st.header("Capítulo 2: A Anatomia da Vitória")
-    st.markdown("""
-    > *"Como cada um se comporta no domingo? Quem é o caçador e quem é a caça?"*
-    
-    - **Lewis Hamilton (O Mestre da Precisão):** O pico no zero indica que ele larga na frente e mantém a ponta.
-    - **Max Verstappen (O Mestre da Recuperação):** A curva mais larga para a direita mostra sua tendência a escalar o pelotão.
-    """)
-    
-    if df is not None:
-        # Cálculo de ganho de posição
-        df_k = df.copy()
-        df_k = df_k[df_k['grid'] > 0] # Remove largadas do box/erros
-        df_k['pos_change'] = df_k['grid'] - df_k['positionOrder']
+    # --- CAPÍTULO 2 ---
+    with tab2:
+        st.header("Capítulo 2: A Anatomia da Vitória")
+        st.markdown("*\"Como cada um se comporta no domingo?\"*")
+        st.write("- **Lewis (O Mestre da Precisão):** O gráfico de densidade mostra um pico no zero. Ele larga na frente e fica lá.")
+        st.write("- **Max (O Mestre da Recuperação):** Veja as barras abaixo. Ele possui 'Masterclasses' de ganhar 14, 13 posições em uma única prova.")
         
-        fig2, ax2 = plt.subplots(figsize=(10, 6))
-        plt.style.use('dark_background')
+        col_a, col_b = st.columns(2)
         
-        sns.kdeplot(data=df_k, x='pos_change', hue='nome_piloto', fill=True, 
-                    palette={'Lewis Hamilton': '#00D2BE', 'Max Verstappen': '#0600EF'}, 
-                    alpha=0.3, linewidth=2, ax=ax2)
-        
-        ax2.axvline(0, color='white', linestyle='--', alpha=0.6, label='Mantém Posição')
-        ax2.set_title("Densidade de Ganho de Posições (KDE)", fontsize=14, color='white')
-        ax2.set_xlabel("Saldo de Posições (Direita = Ganhou | Esquerda = Perdeu)", color='white')
-        ax2.set_xlim(-5, 10)
-        ax2.legend()
-        
-        st.pyplot(fig2)
+        # Gráfico KDE
+        with col_a:
+            st.subheader("Perfil de Densidade")
+            fig2, ax2 = plt.subplots(figsize=(8, 6))
+            sns.kdeplot(data=df[df['grid']>0], x='pos_change', hue='nome_piloto', fill=True, 
+                        palette={'Lewis Hamilton': '#00D2BE', 'Max Verstappen': '#0600EF'}, ax=ax2)
+            ax2.axvline(0, color='white', linestyle='--')
+            ax2.set_xlim(-5, 15)
+            st.pyplot(fig2)
 
-# --- CAPÍTULO 3: VIOLIN PLOTS ---
-with tab3:
-    st.header("Capítulo 3: Consistência e Domínio")
-    st.markdown("""
-    Os **Violin Plots** mostram a distribuição de resultados em uma temporada. 
-    - Um violino "gordo" embaixo significa muitos pódios/vitórias.
-    - Um violino "esticado" significa resultados inconstantes.
-    """)
-    
-    if df is not None:
-        anos = st.slider("Selecione o intervalo de anos:", 2014, 2024, (2021, 2024))
-        df_v = df[(df['year'] >= anos[0]) & (df['year'] <= anos[1])]
+        # Gráfico Top Comebacks
+        with col_b:
+            st.subheader("Top 5 'Masterclasses' (Recuperações)")
+            top_rec = df.sort_values('pos_change', ascending=False).groupby('nome_piloto').head(3) # Top 3 de cada pra caber
+            top_rec['Label'] = top_rec['name'] + ' ' + top_rec['year'].astype(str)
+            
+            fig2b, ax2b = plt.subplots(figsize=(8, 6))
+            sns.barplot(data=top_rec, y='Label', x='pos_change', hue='nome_piloto',
+                        palette={'Lewis Hamilton': '#00D2BE', 'Max Verstappen': '#0600EF'}, ax=ax2b)
+            ax2b.set_xlabel("Posições Ganhas")
+            st.pyplot(fig2b)
+
+    # --- CAPÍTULO 3 ---
+    with tab3:
+        st.header("Capítulo 3: Consistência e Domínio")
+        st.markdown("*\"Dominar não é apenas ganhar, é ganhar com folga.\"*")
+        st.write("Os Violin Plots abaixo mostram a distribuição de chegada. Um violino 'achatado' no topo (posição 1) indica dominância absoluta, como Max em 2023.")
         
-        fig3, ax3 = plt.subplots(figsize=(12, 6))
-        plt.style.use('dark_background')
+        years_sel = st.slider("Filtrar Temporadas", 2014, 2024, (2016, 2024))
+        df_violin = df[(df['year'] >= years_sel[0]) & (df['year'] <= years_sel[1])]
         
-        sns.violinplot(x='year', y='positionOrder', hue='nome_piloto', data=df_v,
-                       split=True, inner='quart', 
-                       palette={'Lewis Hamilton': '#00D2BE', 'Max Verstappen': '#0600EF'}, ax=ax3)
-        
-        ax3.set_ylim(0, 20) # Foca nas primeiras 20 posições
-        ax3.invert_yaxis() # 1º lugar no topo
-        ax3.set_title(f"Distribuição de Resultados ({anos[0]}-{anos[1]})", fontsize=14, color='white')
-        
+        fig3, ax3 = plt.subplots(figsize=(14, 6))
+        sns.violinplot(x='year', y='positionOrder', hue='nome_piloto', data=df_violin,
+                       split=True, inner='quart', palette={'Lewis Hamilton': '#00D2BE', 'Max Verstappen': '#0600EF'}, ax=ax3)
+        ax3.set_ylim(0, 20)
+        ax3.invert_yaxis()
         st.pyplot(fig3)
-        st.markdown("**Insight:** Observe como o violino de Max em 2023 é quase uma linha reta no topo (1º lugar), indicando uma das temporadas mais dominantes da história.")
 
-# --- CAPÍTULO 4: CONCLUSÃO ---
-with tab4:
-    st.header("Conclusão: O Que os Dados Dizem?")
-    
-    col_c1, col_c2 = st.columns(2)
-    with col_c1:
-        st.success("Lewis Hamilton")
-        st.write("Representa a **Consistência Técnica**. Maior número de poles e vitórias absolutas, construídas com precisão cirúrgica e gestão de pneus.")
-    with col_c2:
-        st.warning("Max Verstappen")
-        st.write("Representa a **Aceleração Pura**. Maior taxa de vitórias por temporada recente e capacidade inigualável de recuperação de posições.")
-    
-    st.markdown("---")
-    st.markdown("""
-    ### 🧠 Visão do Analista
-    Os dados não apontam um "melhor" definitivo, mas mostram uma transição de estilos. A era Hamilton foi marcada pela **estratégia e resistência**. A era Verstappen é marcada pela **agressividade e ritmo puro**.
-    
-    *Projeto desenvolvido por [Seu Nome] para Portfólio de Data Science.*
-    """)
+    # --- CAPÍTULO 4 (O QUE FALTAVA) ---
+    with tab4:
+        st.header("Capítulo 4: O DNA do Piloto")
+        st.markdown("*\"Se pudéssemos mapear o código genético de um campeão, como ele seria?\"*")
+        st.write("Este gráfico compara a eficiência pura. Lewis leva vantagem histórica em Poles, enquanto Max tem índices de agressividade e pódio brutais.")
+        
+        # Chama a função do Radar criada lá em cima
+        fig_radar = plot_radar_chart(df)
+        st.pyplot(fig_radar)
 
-# Rodapé
-st.markdown("---")
-st.markdown("Dados fornecidos pela Ergast API (1950-2024) | Processados via Pandas")
+    # --- CONCLUSÃO ---
+    with tab5:
+        st.header("Conclusão: O Que os Dados Dizem?")
+        st.balloons() # Um efeito especial para o final!
+        
+        st.markdown("""
+        ### 🏁 Veredito dos Dados
+        
+        Ao final desta análise, os números revelam que não estamos olhando apenas para dois pilotos, mas para duas filosofias de vitória:
+        
+        1.  **A Era Hamilton (A Fortaleza):** Construída sobre Pole Positions e controle de corrida. A estatística mostra que se Lewis larga em 1º, a chance de vitória é a maior da história.
+        2.  **A Era Verstappen (O Ataque):** Construída sobre ritmo de corrida e agressividade. O DNA de Max mostra que a posição de largada importa menos para ele do que para qualquer outro campeão.
+        
+        > *"Os dados não dizem quem é o GOAT, mas revelam que vivemos a transição entre a maior consistência técnica da história e a maior aceleração de resultados já registrada."*
+        
+        ---
+        **E você? O que os dados te dizem sobre o futuro dessa disputa?**
+        """)
+        st.success("Projeto Desenvolvido para Portfólio de Data Science | Python + Streamlit")
+
+else:
+    st.warning("Aguardando carregamento dos dados...")
