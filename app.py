@@ -1,24 +1,3 @@
-Desafio aceito! Vamos transformar o seu projeto em um dashboard "Nível NASA" (Profissional Sênior). 🚀
-
-Vou substituir a biblioteca gráfica antiga (matplotlib/seaborn) pela Plotly. A diferença é brutal: agora os gráficos serão interativos. O recrutador vai poder passar o mouse, dar zoom, filtrar clicando na legenda e ver detalhes de cada barra.
-
-Também adicionei a Sidebar Profissional e o Rodapé de Contato.
-
-⚠️ Importante: Atualize o requirements.txt
-Antes de rodar o código novo, você precisa adicionar a biblioteca plotly no seu arquivo requirements.txt. Ele deve ficar assim:
-
-Plaintext
-
-streamlit
-pandas
-plotly
-matplotlib
-seaborn
-Código Final app.py (Versão 2.0 - Interativa)
-Copie e substitua TODO o conteúdo do seu arquivo app.py:
-
-Python
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -283,3 +262,4 @@ if results is not None:
 
 else:
     st.warning("Aguardando carregamento dos dados...")
+
