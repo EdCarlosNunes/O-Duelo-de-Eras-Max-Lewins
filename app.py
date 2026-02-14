@@ -62,7 +62,7 @@ if results is not None:
 # 2. BARRA LATERAL (SIDEBAR)
 # ==========================================
 with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=100) # Ícone genérico de perfil
+    st.image("https://media.licdn.com/dms/image/v2/D4D03AQFPPiOLwPlsTA/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1696888864643?e=1772668800&v=beta&t=MIDKLRKUkkRQG_1kfursTHj8rsU6zk_ZTCspM9Vwbew", width=100) # Ícone genérico de perfil
     st.title("Analista de Dados")
     st.write("**Ed Carlos Nunes**")
     st.markdown("---")
@@ -71,7 +71,7 @@ with st.sidebar:
     st.caption("Apaixonado por transformar dados complexos em histórias visuais. Especialista em Python, Pandas e Visualização de Dados.")
     
     st.write("🔗 **Conecte-se:**")
-    st.markdown("[👔 LinkedIn](https://www.linkedin.com/in/edcarlosnunes)") # Substitua pelo seu link real
+    st.markdown("[👔 LinkedIn](https://www.linkedin.com/in/ed-carlos-nunes-almeida-418767125/?originalSubdomain=br)") # Substitua pelo seu link real
     st.markdown("[💻 GitHub](https://github.com/EdCarlosNunes)")
     
     st.markdown("---")
@@ -256,10 +256,11 @@ if results is not None:
             st.markdown("### 📬 Vamos Conversar?")
             st.write("Gostou da análise? Estou disponível para projetos de Data Science.")
             
-            st.link_button("👔 Me chame no LinkedIn", "https://www.linkedin.com/in/edcarlosnunes") # Ajuste o link
-            st.link_button("📧 Enviar E-mail", "mailto:seuemail@exemplo.com")
+            st.link_button("👔 Me chame no LinkedIn", "https://www.linkedin.com/in/ed-carlos-nunes-almeida-418767125/?originalSubdomain=br") # Ajuste o link
+            st.link_button("📧 Enviar E-mail", "ed.carlos.git@gmail.com")
             st.link_button("💻 Ver Código no GitHub", "https://github.com/EdCarlosNunes")
 
 else:
     st.warning("Aguardando carregamento dos dados...")
+
 
