@@ -124,9 +124,8 @@ if df is not None:
     # --- CAPÍTULO 1 ---
     with tab1:
         st.header("Capítulo 1: Trajetórias Paralelas (Sucesso vs. Experiência)")
-        st.markdown("*\"Não olhamos para os anos do calendário, mas para a quilometragem de cada um.\"*")
         
-        # TEXTO ATUALIZADO AQUI
+        # TEXTO DO USUÁRIO INSERIDO AQUI
         st.write("""
         Analisando os dados de número de corridas e vitórias na Fórmula 1, vemos que o Hamilton teve um grande começo. 
         Porém, ele começou com 22 anos em 2007, o que dá um ganho em cima de Max, que começou na Fórmula 1 com 17 anos em 2015. 
@@ -136,7 +135,9 @@ if df is not None:
         df_traj = df.sort_values(['driverId', 'year', 'round'])
         df_traj['win'] = (df_traj['positionOrder'] == 1).astype(int)
         df_traj['cum_wins'] = df_traj.groupby('driverId')['win'].cumsum()
-        df_traj['race_count'] = df_traj.groupby('driverId')'cumcount()' + 1
+        
+        # CORREÇÃO AQUI: removidas as aspas e colchetes errados
+        df_traj['race_count'] = df_traj.groupby('driverId').cumcount() + 1
         
         # Tamanho reduzido (10, 4) para caber melhor na tela
         fig1, ax1 = plt.subplots(figsize=(10, 4))
@@ -225,4 +226,3 @@ if df is not None:
 
 else:
     st.warning("Aguardando carregamento dos dados...")
-
