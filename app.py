@@ -204,7 +204,14 @@ if results is not None:
     # --- CAPÍTULO 5 (NOVO E CORRIGIDO) ---
     with tab5:
         st.header("Capítulo 5: Duelo de Probabilidades (Grid vs Pódio)")
-        st.markdown("Comparativo direto: Qual a chance de pódio para cada piloto dependendo de onde largam (Posições 1 a 20)?")
+        st.markdown("""
+        ### ⚔️ O Veredito: Resiliência vs. Controle
+        
+        Este gráfico confirma sua hipótese: **Max Verstappen é estatisticamente mais resiliente a posições ruins de largada.**
+        
+        * **Max Verstappen (O Caçador):** As barras azuis mostram que ele sustenta uma chance de pódio altíssima (acima de 50-60%) mesmo largando do meio do pelotão (P6-P14). Para Max, o grid é apenas um obstáculo temporário.
+        * **Lewis Hamilton (O Controlador):** As barras roxas mostram um domínio absoluto nas primeiras posições (P1-P3), mas uma queda acentuada ao largar de trás. O estilo de Hamilton é baseado na **perfeição da classificação**: ele vence evitando o tráfego, enquanto Max vence atacando o tráfego.
+        """)
 
         # 1. Preparar Dados Básicos
         df_chart5 = df.copy()
@@ -296,3 +303,4 @@ if results is not None:
 
 else:
     st.warning("Aguardando carregamento dos dados...")
+
