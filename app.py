@@ -131,6 +131,19 @@ if results is not None:
     # --- CAPÍTULO 2: ANATOMIA (PLOTLY) ---
     with tab2:
         st.header("Capítulo 2: A Anatomia da Vitória")
+        st.markdown("""
+        ### 📊 Análise Técnica: O "Sniper" vs. O "Rolo Compressor"
+        
+        Ao analisarmos a distribuição de *Ganho de Posições* (Grid - Chegada), os dados revelam dois comportamentos estatísticos distintos:
+        
+        1.  **Lewis Hamilton (O Pico da Precisão):**
+            * Observe como a curva de Hamilton é **leptocúrtica** (pico alto e estreito) em torno do **Zero**.
+            * **O que isso significa?** Hamilton vence "no sábado". Sua estratégia histórica baseia-se em conquistar a Pole Position e converter essa vantagem em vitória sem precisar escalar o pelotão. É um estilo de **controle e gestão de liderança**.
+            
+        2.  **Max Verstappen (A Cauda da Agressividade):**
+            * A distribuição de Max apresenta uma **assimetria positiva** (cauda longa para a direita).
+            * **O que isso significa?** Os dados mostram uma frequência anormal de corridas onde ele ganha +5, +10 ou +14 posições. Isso indica que Max não depende da posição de largada para vencer; ele possui o maior índice de **eficiência de ultrapassagem** da era moderna.
+        """)
         col_a, col_b = st.columns(2)
         
         with col_a:
@@ -282,6 +295,7 @@ if results is not None:
 
 else:
     st.warning("Aguardando carregamento dos dados...")
+
 
 
 
