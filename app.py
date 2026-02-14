@@ -107,7 +107,11 @@ if results is not None:
     # --- CAPÍTULO 1: TRAJETÓRIAS (PLOTLY) ---
     with tab1:
         st.header("Capítulo 1: Trajetórias Paralelas")
-        st.write("Ritmo de vitórias acumuladas por número de GPs disputados.")
+        st.write("""
+        Analisando os dados de número de corridas e vitórias na Fórmula 1, vemos que o Hamilton teve um grande começo. 
+        Porém, ele começou com 22 anos em 2007, o que dá um ganho em cima de Max, que começou na Fórmula 1 com 17 anos em 2015. 
+        Conseguimos ver que a maturidade contou para esse início grandioso de Hamilton, porém vemos que o ritmo de vitórias de Max ao atingir 200 corridas é assustadoramente similar ao auge de Hamilton.
+        """)
         
         # Preparar dados
         df_traj = df.sort_values(['driverId', 'year', 'round'])
@@ -154,7 +158,11 @@ if results is not None:
     # --- CAPÍTULO 3: PONTOS (PLOTLY) ---
     with tab3:
         st.header("Capítulo 3: Pontos Totais por Temporada")
-        st.markdown("Comparativo absoluto de pontos (incluindo Sprints).")
+        st.markdown("""
+        Neste gráfico, comparamos o início da jornada de ambos. A análise sugere que **Max Verstappen vive seu auge técnico**, quebrando recordes consecutivamente, enquanto Hamilton caminha para o encerramento de uma carreira lendária. 
+        É provável que Max supere os números de Lewis, embora com um estilo diferente. Se no passado Max mostrava instabilidade, os dados a partir de 2020 revelam uma transformação: ele atingiu uma **maturidade e uma consistência impressionantes**.
+        """)
+
 
         def get_total_points(driver_id):
             df_res = results[results['driverId'] == driver_id].merge(races[['raceId', 'year']], on='raceId')
@@ -185,6 +193,11 @@ if results is not None:
     # --- CAPÍTULO 4: PROBABILIDADE MAX (PLOTLY) ---
     with tab4:
         st.header("Capítulo 4: Probabilidade de Pódio (Max)")
+        st.markdown("""
+        Esta análise mede a **Taxa de Conversão** entre Posição de Largada e Pódios. Aqui identificamos o diferencial competitivo mais letal de Verstappen: a **independência do Grid**.
+        Ao contrário da média histórica, os dados mostram que Max consegue atingir o pódio partindo de praticamente qualquer posição. Essa capacidade de anular desvantagens de largada é o fator chave que o projeta matematicamente para superar os recordes absolutos de Hamilton.
+        """)
+
         
         max_id = 830
         max_results = results[results['driverId'] == max_id].copy()
@@ -204,7 +217,14 @@ if results is not None:
     # --- CAPÍTULO 5: DUELO DE GRID (PLOTLY) ---
     with tab5:
         st.header("Capítulo 5: Duelo de Resiliência")
-        st.markdown("### ⚔️ Resiliência (Max) vs Controle (Lewis)")
+        st.markdown("""
+        ### ⚔️ O Veredito: Resiliência vs. Controle
+        
+        Este gráfico confirma sua hipótese: **Max Verstappen é estatisticamente mais resiliente a posições ruins de largada.**
+        
+        * **Max Verstappen (O Caçador):** As barras azuis mostram que ele sustenta uma chance de pódio altíssima (acima de 50-60%) mesmo largando do meio do pelotão (P6-P14). Para Max, o grid é apenas um obstáculo temporário.
+        * **Lewis Hamilton (O Controlador):** As barras roxas mostram um domínio absoluto nas primeiras posições (P1-P3), mas uma queda acentuada ao largar de trás. O estilo de Hamilton é baseado na **perfeição da classificação**: ele vence evitando o tráfego, enquanto Max vence atacando o tráfego.
+        """)
         
         # Preparação dos dados completa
         df_chart5 = df.copy()
@@ -262,6 +282,7 @@ if results is not None:
 
 else:
     st.warning("Aguardando carregamento dos dados...")
+
 
 
 
