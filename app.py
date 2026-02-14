@@ -140,7 +140,7 @@ if df is not None:
         df_traj['race_count'] = df_traj.groupby('driverId').cumcount() + 1
         
         # Tamanho reduzido (10, 4) para caber melhor na tela
-        fig1, ax1 = plt.subplots(figsize=(10, 4))
+        fig1, ax1 = plt.subplots(figsize=(9, 3))
         plt.style.use('dark_background')
         sns.lineplot(data=df_traj, x='race_count', y='cum_wins', hue='nome_piloto', 
                      palette={'Lewis Hamilton': '#00D2BE', 'Max Verstappen': '#0600EF'}, linewidth=2.5, ax=ax1)
@@ -226,3 +226,4 @@ if df is not None:
 
 else:
     st.warning("Aguardando carregamento dos dados...")
+
