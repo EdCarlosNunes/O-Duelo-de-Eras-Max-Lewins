@@ -136,7 +136,7 @@ if df is not None:
         df_traj = df.sort_values(['driverId', 'year', 'round'])
         df_traj['win'] = (df_traj['positionOrder'] == 1).astype(int)
         df_traj['cum_wins'] = df_traj.groupby('driverId')['win'].cumsum()
-        df_traj['race_count'] = df_traj.groupby('driverId')['cumcount()'] + 1
+        df_traj['race_count'] = df_traj.groupby('driverId')'cumcount()' + 1
         
         # Tamanho reduzido (10, 4) para caber melhor na tela
         fig1, ax1 = plt.subplots(figsize=(10, 4))
@@ -225,3 +225,4 @@ if df is not None:
 
 else:
     st.warning("Aguardando carregamento dos dados...")
+
