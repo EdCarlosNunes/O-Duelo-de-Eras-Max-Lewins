@@ -3,26 +3,24 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-results = pd.read_csv('results.csv')
-drivers = pd.read_csv('drivers.csv')
-races = pd.read_csv('races.csv')
-
 # Configuração da Página
 st.set_page_config(page_title="F1 Analytics: Hamilton vs Verstappen", layout="wide")
 
 st.title("🏎️ F1 Data Insight: Hamilton vs Verstappen")
 st.markdown("Uma análise profissional sobre a transição de dominância na Fórmula 1.")
 
-# Função para carregar dados - Buscando direto na raiz do seu GitHub
+# FUNÇÃO PROTEGIDA - O carregamento só acontece aqui dentro
 @st.cache_data
 def load_data():
     try:
+        # Verifique se os nomes abaixo estão EXATAMENTE iguais no seu GitHub (tudo minúsculo)
         results = pd.read_csv('results.csv').drop_duplicates()
         drivers = pd.read_csv('drivers.csv').drop_duplicates()
         races = pd.read_csv('races.csv').drop_duplicates()
         return results, drivers, races
     except Exception as e:
-        st.error(f"Erro ao ler CSVs: {e}")
+        st.error(f"Erro ao ler os arquivos CSV: {e}")
+        st.info("Dica: Verifique se os arquivos results.csv, drivers.csv e races.csv estão na raiz do GitHub.")
         return None, None, None
 
 results, drivers, races = load_data()
@@ -51,6 +49,7 @@ if results is not None:
 
     with tab2:
         st.subheader("Densidade de Ganho de Posições")
+        # Filtro Hamilton (1) e Verstappen (830)
         ham_max = df[df['driverId'].isin([1, 830])].copy()
         ham_max['pos_change'] = ham_max['grid'] - ham_max['positionOrder']
         
@@ -59,5 +58,3 @@ if results is not None:
                     palette={'Lewis Hamilton': '#00D2BE', 'Max Verstappen': '#0600EF'}, ax=ax2)
         plt.axvline(0, color='white', linestyle='--')
         st.pyplot(fig2)
-
-        st.info("Valores positivos indicam ganho de posições durante a corrida.")
