@@ -62,7 +62,7 @@ if results is not None:
 # 2. BARRA LATERAL (SIDEBAR)
 # ==========================================
 with st.sidebar:
-    st.image("https://media.licdn.com/dms/image/v2/D4D03AQFPPiOLwPlsTA/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1696888864643?e=1772668800&v=beta&t=MIDKLRKUkkRQG_1kfursTHj8rsU6zk_ZTCspM9Vwbew", width=100) # Ícone genérico de perfil
+    st.image("https://avatars.githubusercontent.com/u/93043407?v=4", width=100) # Ícone genérico de perfil
     st.title("Analista de Dados")
     st.write("**Ed Carlos Nunes**")
     st.markdown("---")
@@ -262,5 +262,6 @@ if results is not None:
 
 else:
     st.warning("Aguardando carregamento dos dados...")
+
 
 
