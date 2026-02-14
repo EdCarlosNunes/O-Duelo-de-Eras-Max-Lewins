@@ -32,7 +32,7 @@ Ao cruzar dados de Grid de Largada vs. Resultado Final, descobrimos dois perfis 
 
 ### 2. Duelo de Probabilidades (O Insight Principal)
 *(Gráfico que prova a resiliência de Max partindo do fundo do grid)*
-![Print Duelo](newplot (1).png)
+![Print Duelo](imagem.png)
 
 ---
 
