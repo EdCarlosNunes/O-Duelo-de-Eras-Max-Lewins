@@ -162,8 +162,10 @@ if results is not None:
     # --- CAPÍTULO 4 (NOVO GRÁFICO) ---
     with tab4:
         st.header("Capítulo 4: Probabilidade de Pódio - Max Verstappen")
-        st.markdown("Esta análise mede a **Taxa de Conversão** entre Posição de Largada e Pódios. Aqui identificamos o diferencial competitivo mais letal de Verstappen: a **independência do Grid**.
-Ao contrário da média histórica, os dados mostram que Max consegue atingir o pódio partindo de praticamente qualquer posição. Essa capacidade de anular desvantagens de largada é o fator chave que o projeta matematicamente para superar os recordes absolutos de Hamilton.")
+        st.markdown("""
+        Esta análise mede a **Taxa de Conversão** entre Posição de Largada e Pódios. Aqui identificamos o diferencial competitivo mais letal de Verstappen: a **independência do Grid**.
+        Ao contrário da média histórica, os dados mostram que Max consegue atingir o pódio partindo de praticamente qualquer posição. Essa capacidade de anular desvantagens de largada é o fator chave que o projeta matematicamente para superar os recordes absolutos de Hamilton.
+        """)
         
         # 1. Filtrar e Preparar Dados (Código adaptado do seu pedido)
         max_id = 830
