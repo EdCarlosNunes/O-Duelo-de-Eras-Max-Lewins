@@ -41,7 +41,8 @@ Ao cruzar dados de Grid de Largada vs. Resultado Final, descobrimos dois perfis 
 * **Streamlit:** Framework para Web App interativo.
 * **Pandas:** Manipulação e limpeza de dados (ETL).
 * **Plotly:** Gráficos interativos e dinâmicos.
-* **Dataset:** Dados históricos de 1950 a 2024.
+* **Dataset:** Dados históricos de 1950 a 2024
+* **Link Dataset:** https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020
 
 ---
 
