@@ -122,6 +122,21 @@ st.markdown("""
         display: none;
     }
 
+    /* CORREÇÃO DO SCROLL SHADOW/GRADIENT */
+    /* Remove sombra de todos os botões de aba */
+    div[data-testid="stTabs"] button {
+        box-shadow: none !important;
+    }
+    /* Remove sombra/fundo do container de scroll */
+    div[data-testid="stTabs"] div {
+        box-shadow: none !important;
+    }
+    /* Remove especificamente o gradiente lateral (que é um ::after ou ::before em alguns temas) */
+    .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar {
+        width: 0 !important;
+        background: transparent !important;
+    }
+
     /* Sidebar Glassmorphism */
     section[data-testid="stSidebar"] > div {
         background-color: rgba(255, 255, 255, 0.7);
@@ -191,7 +206,7 @@ with st.sidebar:
     st.info("Especialista em transformar dados complexos em experiências visuais. Foco em Python, Dashboards e Storytelling.")
     st.markdown("---")
     st.write("🎛️ **Filtros Globais**")
-    filtro_anos = st.slider("Período de Análise:", 2014, 2024, (2015, 2024))
+    filtro_anos = st.slider("Período de Análise:", 2014, 2025, (2015, 2025))
     st.markdown("---")
     st.markdown("🔗 [**LinkedIn**](https://www.linkedin.com/in/ed-carlos-nunes-almeida-418767125/)")
     st.markdown("🔗 [**GitHub**](https://github.com/EdCarlosNunes)")
@@ -214,18 +229,19 @@ st.markdown("""
         </div>
     </div>
     <div style="display: flex; gap: 10px;">
-        <span style="background: rgba(37, 99, 235, 0.1); color: #2563EB; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">v2.0 Glass</span>
+        <span style="background: rgba(37, 99, 235, 0.1); color: #2563EB; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">v2.1 Context</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 if results is not None:
     # Abas com Ícones
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "📈 Trajetórias", 
         "🚀 Anatomia",
         "🏆 Pontos",
         "📊 Probabilidade",
+        "🧠 Contexto", 
         "⚔️ Duelo Grid", 
         "🏁 Veredito"
     ])
@@ -260,11 +276,12 @@ if results is not None:
 
     # --- CAPÍTULO 1: TRAJETÓRIAS ---
     with tab1:
-        st.subheader("Capítulo 1: Trajetórias Paralelas")
+        st.subheader("Trajetória por Número de Corridas (Maturidade)")
         st.markdown("""
-        Analisando os dados de número de corridas e vitórias na Fórmula 1, vemos que o Hamilton teve um grande começo. 
-        Porém, ele começou com 22 anos em 2007, o que dá um ganho em cima de Max, que começou na Fórmula 1 com 17 anos em 2015. 
-        Conseguimos ver que a maturidade contou para esse início grandioso de Hamilton, porém vemos que o ritmo de vitórias de Max ao atingir 200 corridas é assustadoramente similar ao auge de Hamilton.
+        > *Respondendo à crítica:* "As temporadas do Max são mais longas, o que distorce a comparação por ano."
+        
+        Este gráfico corrige essa distorção. Ao comparar pelo **Número de GPs Disputados** (e não por ano), vemos a curva real de evolução. 
+        Note como a inclinação de Max (Azul) é, de fato, mais agressiva nos últimos 100 GPs do que a de Lewis (Roxo) no mesmo estágio de experiência, confirmando que seu domínio vai além do "carro dominante".
         """)
         
         # Preparar dados
@@ -275,26 +292,16 @@ if results is not None:
         
         fig1 = px.line(df_traj, x='race_count', y='cum_wins', color='nome_piloto',
                        color_discrete_map=CORES,
-                       labels={'race_count': 'GPs Disputados', 'cum_wins': 'Vitórias Acumuladas'})
+                       labels={'race_count': 'Número de GPs na Carreira', 'cum_wins': 'Vitórias Acumuladas'})
         
         fig1 = update_chart_layout(fig1)
         st.plotly_chart(fig1, use_container_width=True)
 
     # --- CAPÍTULO 2: ANATOMIA ---
     with tab2:
-        st.subheader("Capítulo 2: A Anatomia da Vitória")
+        st.subheader("Anatomia da Vitória")
         st.markdown("""
-        ### 📊 Análise Técnica: O "Sniper" vs. O "Rolo Compressor"
-        
-        Ao analisarmos a distribuição de *Ganho de Posições* (Grid - Chegada), os dados revelam dois comportamentos estatísticos distintos:
-        
-        1.  **Lewis Hamilton (O Pico da Precisão):**
-            * Observe como a curva de Hamilton é **leptocúrtica** (pico alto e estreito) em torno do **Zero**.
-            * **O que isso significa?** Hamilton vence "no sábado". Sua estratégia histórica baseia-se em conquistar a Pole Position e converter essa vantagem em vitória sem precisar escalar o pelotão. É um estilo de **controle e gestão de liderança**.
-            
-        2.  **Max Verstappen (A Cauda da Agressividade):**
-            * A distribuição de Max apresenta uma **assimetria positiva** (cauda longa para a direita).
-            * **O que isso significa?** Os dados mostram uma frequência anormal de corridas onde ele ganha +5, +10 ou +14 posições. Isso indica que Max não depende da posição de largada para vencer; ele possui o maior índice de **eficiência de ultrapassagem** da era moderna.
+        Análise da distribuição de ganho de posições. Lewis vence controlando da pole (pico em 0), enquanto Max frequentemente vence recuperando posições (cauda à direita).
         """)
         
         col_a, col_b = st.columns(2)
@@ -318,16 +325,13 @@ if results is not None:
             
             fig2b = update_chart_layout(fig2b)
             fig2b.update_layout(showlegend=False, yaxis={'categoryorder':'total ascending'})
-            fig2b.update_traces(textfont_color='#000000', textfont_weight='bold') # Texto nas barras
+            fig2b.update_traces(textfont_color='#000000', textfont_weight='bold') 
             st.plotly_chart(fig2b, use_container_width=True)
 
     # --- CAPÍTULO 3: PONTOS ---
     with tab3:
-        st.subheader("Capítulo 3: Pontos Totais por Temporada")
-        st.markdown("""
-        Neste gráfico, comparamos o início da jornada de ambos. A análise sugere que **Max Verstappen vive seu auge técnico**, quebrando recordes consecutivamente, enquanto Hamilton caminha para o encerramento de uma carreira lendária. 
-        É provável que Max supere os números de Lewis, embora com um estilo diferente. Se no passado Max mostrava instabilidade, os dados a partir de 2020 revelam uma transformação: ele atingiu uma **maturidade e uma consistência impressionantes**.
-        """)
+        st.subheader("Pontos Totais por Temporada")
+        st.markdown("Comparativo absoluto de pontos somados por ano (incluindo Sprints e Voltas Rápidas).")
         
         def get_total_points(driver_id):
             df_res = results[results['driverId'] == driver_id].merge(races[['raceId', 'year']], on='raceId')
@@ -357,11 +361,8 @@ if results is not None:
 
     # --- CAPÍTULO 4: PROBABILIDADE ---
     with tab4:
-        st.subheader("Capítulo 4: Probabilidade de Pódio (Max)")
-        st.markdown("""
-        Esta análise mede a **Taxa de Conversão** entre Posição de Largada e Pódios. Aqui identificamos o diferencial competitivo mais letal de Verstappen: a **independência do Grid**.
-        Ao contrário da média histórica, os dados mostram que Max consegue atingir o pódio partindo de praticamente qualquer posição. Essa capacidade de anular desvantagens de largada é o fator chave que o projeta matematicamente para superar os recordes absolutos de Hamilton.
-        """)
+        st.subheader("Probabilidade de Pódio (Max)")
+        st.markdown("Taxa de conversão de Max Verstappen por posição de largada (frequência relativa).")
         
         max_id = 830
         max_results = results[results['driverId'] == max_id].copy()
@@ -379,26 +380,89 @@ if results is not None:
         fig4.update_traces(textfont_color='#000000', textfont_weight='bold')
         st.plotly_chart(fig4, use_container_width=True)
 
-    # --- CAPÍTULO 5: DUELO DE GRID ---
+    # --- CAPÍTULO 5: CONTEXTO (NOVO!) ---
     with tab5:
-        st.subheader("Capítulo 5: Duelo de Resiliência")
+        st.subheader("Contexto & Eficiência: Respondendo aos Números")
         st.markdown("""
-        ### ⚔️ O Veredito: Resiliência vs. Controle
+        > *Crítica Construtiva:* "Quantas vezes isso (vencer largando de trás) realmente aconteceu? É estatisticamente relevante?"
         
-        Este gráfico confirma sua hipótese: **Max Verstappen é estatisticamente mais resiliente a posições ruins de largada.**
+        Para responder a isso, plotamos **TODAS** as corridas de ambos no gráfico de dispersão abaixo.
         
-        * **Max Verstappen (O Caçador):** As barras azuis mostram que ele sustenta uma chance de pódio altíssima (acima de 50-60%) mesmo largando do meio do pelotão (P6-P14). Para Max, o grid é apenas um obstáculo temporário.
-        * **Lewis Hamilton (O Controlador):** As barras roxas mostram um domínio absoluto nas primeiras posições (P1-P3), mas uma queda acentuada ao largar de trás. O estilo de Hamilton é baseado na **perfeição da classificação**: ele vence evitando o tráfego, enquanto Max vence atacando o tráfego.
+        *   Cada ponto é uma corrida.
+        *   **Eixo X**: Posição de Largada.
+        *   **Eixo Y**: Posição de Chegada.
+        *   **Linha Tracejada**: Posição Mantida. Pontos *abaixo* da linha indicam ganho de posições.
+        
+        Os dados mostram visualmente a dispersão de Max (Azul) para a direita (largando de trás) e para baixo (chegando na frente), confirmando a consistência dessas recuperações.
         """)
         
-        df_chart5 = df.copy()
-        df_chart5['is_podium'] = df_chart5['positionOrder'].apply(lambda x: 1 if x <= 3 else 0)
+        # Gráfico de Dispersão: Grid vs Finish
+        try:
+            fig_ctx = px.scatter(df, x="grid", y="positionOrder", color="nome_piloto",
+                                 color_discrete_map=CORES,
+                                 hover_data=['name', 'year'],
+                                 labels={'grid': 'Largada (Grid)', 'positionOrder': 'Chegada (Final)'},
+                                 trendline="ols") # Tenta adicionar linha de tendência
+        except Exception as e:
+            # Fallback seguro caso statsmodels falhe ou grid/dados sejam insuficientes
+            fig_ctx = px.scatter(df, x="grid", y="positionOrder", color="nome_piloto",
+                                 color_discrete_map=CORES,
+                                 hover_data=['name', 'year'],
+                                 labels={'grid': 'Largada (Grid)', 'positionOrder': 'Chegada (Final)'})
+        
+        fig_ctx.add_shape(type="line", x0=1, y0=1, x1=20, y1=20,
+                          line=dict(color="Gray", width=1, dash="dash"))
+        
+        fig_ctx.update_layout(yaxis=dict(autorange="reversed")) # Inverter Y para 1º lugar ficar no topo
+        fig_ctx = update_chart_layout(fig_ctx)
+        st.plotly_chart(fig_ctx, use_container_width=True)
+        
+        st.markdown("### Eficiência de Conversão: Largando do Pelotão (P4+)")
+        st.markdown("Quantas vezes eles venceram largando **fora do Top 3**? A estatística crua:")
+        
+        # Tabela de Eficiência
+        # Filtra corridas largando >= 4
+        df_mid = df[df['grid'] >= 4]
+        stats_mid = df_mid.groupby('nome_piloto').agg(
+            corridas=('raceId', 'count'),
+            vitorias=('positionOrder', lambda x: (x==1).sum()),
+            podios=('positionOrder', lambda x: (x<=3).sum())
+        ).reset_index()
+        
+        stats_mid['win_rate'] = (stats_mid['vitorias'] / stats_mid['corridas']) * 100
+        stats_mid['podium_rate'] = (stats_mid['podios'] / stats_mid['corridas']) * 100
+        
+        # Exibir como métricas
+        col1, col2 = st.columns(2)
+        
+        # Safe access to avoid errors if no data
+        max_stats = stats_mid[stats_mid['nome_piloto'].str.contains('Max')]
+        lew_stats = stats_mid[stats_mid['nome_piloto'].str.contains('Lewis')]
+        
+        with col1:
+            wins = max_stats['vitorias'].values[0] if not max_stats.empty else 0
+            rate = max_stats['win_rate'].values[0] if not max_stats.empty else 0
+            st.metric("Max: Vitórias largando > P3", f"{wins}", f"{rate:.1f}% de taxa")
+            
+        with col2:
+            wins = lew_stats['vitorias'].values[0] if not lew_stats.empty else 0
+            rate = lew_stats['win_rate'].values[0] if not lew_stats.empty else 0
+            st.metric("Lewis: Vitórias largando > P3", f"{wins}", f"{rate:.1f}% de taxa")
+
+
+    # --- CAPÍTULO 6: DUELO GRID ---
+    with tab6:
+        st.subheader("Duelo de Resiliência")
+        st.markdown(" Comparativo direto de chance de pódio por posição de largada.")
+        
+        df_chart5_data = df.copy()
+        df_chart5_data['is_podium'] = df_chart5_data['positionOrder'].apply(lambda x: 1 if x <= 3 else 0)
         
         grids_all = pd.DataFrame({'grid': range(1, 21)})
         pilotos_all = pd.DataFrame({'surname': ['Hamilton', 'Verstappen']})
         template_df = pd.merge(pilotos_all.assign(key=1), grids_all.assign(key=1), on='key').drop('key', axis=1)
         
-        stats_real = df_chart5.groupby(['surname', 'grid']).agg(
+        stats_real = df_chart5_data.groupby(['surname', 'grid']).agg(
             total_largadas=('raceId', 'count'),
             total_podios=('is_podium', 'sum')
         ).reset_index()
@@ -418,11 +482,7 @@ if results is not None:
         st.plotly_chart(fig5, use_container_width=True)
 
     # --- CONCLUSÃO ---
-    with tab6:
-        # Aqui, como não é apenas um container simples, vou usar o 'glass-manual' para o container de veredito
-        # se quiser manter o fundo. Mas com o CSS global de aba, não precisa.
-        # Vou deixar o HTML puro para os cards internos.
-        
+    with tab7:
         st.markdown('<h2 style="text-align: center; margin-bottom: 30px;">Veredito dos Dados</h2>', unsafe_allow_html=True)
         
         st.markdown("""
@@ -446,6 +506,6 @@ if results is not None:
         
         if st.button("🎉 Celebrar a Análise", use_container_width=True):
             st.balloons()
-
+            
 else:
     st.warning("Aguardando carregamento dos dados...")
